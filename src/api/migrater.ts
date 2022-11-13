@@ -3,7 +3,7 @@ import { config } from "~/config/config";
 import axios from "axios";
 import md5 from "md5"
 import { S3 } from '@aws-sdk/client-s3';
-
+import mime from "mime"
 
 function getImages(content: string) {
     const markdownURLList = (content.match(/\!\[.*\]\(.*\)/g) || [])
@@ -53,10 +53,16 @@ async function upload(filename: string, body: any) {
     let params = {
         Bucket: config.s3.bucket,
         Key: `${config.s3.prefix}/${filename}`,
-        Body: body
+        Body: body,
+        ContentType: mime.getType(filename)
     }
 
     await client.putObject(params)
+    if (config.s3.baseURL) {
+        let url = new URL(config.s3.baseURL)
+        url.pathname = params.Key
+        return url.toString()
+    }
     let endpoint = new URL(config.s3.endpoint)
     endpoint.host = `${params.Bucket}.${endpoint.host}`
     endpoint.pathname = params.Key
@@ -79,7 +85,7 @@ export async function migrate(md: string) {
         if (ext) ext = "." + ext
         let rsp = await axios.get(image, { responseType: "arraybuffer" })
         let buffer = rsp.data
-        filename = md5(buffer) + ext;
+        filename = md5(filename) + ext;
 
         let newURL = await upload(filename, buffer)
         md = md.replaceAll(images[i], newURL)

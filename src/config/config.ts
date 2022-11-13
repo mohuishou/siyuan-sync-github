@@ -11,6 +11,8 @@ export interface S3 {
     bucket: string;
     region: string;
     prefix: string;
+    // 自定义域名
+    baseURL: string;
 }
 
 export interface Attr {
