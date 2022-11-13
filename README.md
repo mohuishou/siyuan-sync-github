@@ -55,5 +55,5 @@
         // 自定义域名
         baseURL: "https://you-domain.com/"
     },
-}
+  }
   ```
