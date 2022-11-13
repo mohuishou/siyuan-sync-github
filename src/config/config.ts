@@ -16,6 +16,7 @@ export interface S3 {
 export interface Attr {
     key: string;
     default: any;
+    type?: "string" | "json" | "array"
 }
 
 export interface Attrs {

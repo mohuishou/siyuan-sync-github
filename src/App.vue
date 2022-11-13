@@ -73,7 +73,18 @@ async function sync(doc: block) {
   let attrs: any = {}
   for (const key in config.sync.attrs) {
     const dest = config.sync.attrs[key]
-    if (dest.key in data.attrs) attrs[key] = data.attrs[dest.key]
+    if (dest.key in data.attrs) {
+      switch (dest.type) {
+        case "array":
+          attrs[key] = data.attrs[dest.key].split(",")
+          break
+        case "json":
+          attrs[key] = JSON.parse(data.attrs[dest.key].split(","))
+          break
+        default:
+          attrs[key] = data.attrs[dest.key]
+      }
+    }
     else if (dest.default) attrs[key] = dest.default
   }
 
