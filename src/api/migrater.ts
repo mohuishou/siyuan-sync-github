@@ -2,45 +2,8 @@
 import { config } from "~/config/config";
 import axios from "axios";
 import md5 from "md5"
-import S3 from 'aws-sdk/clients/s3';
-import { da, pa } from "element-plus/es/locale";
+import { S3 } from '@aws-sdk/client-s3';
 
-
-// async function migrate(ctx: PicGo, files: string[]) {
-//     ctx.log.info("Migrating...");
-
-//     let total = 0;
-//     let success = 0;
-
-//     for (const file of files) {
-//         const fileHandler = new BlogFileHandler(ctx);
-//         // read File
-//         fileHandler.read(file);
-//         const migrater = new Migrater(ctx, null, file);
-//         migrater.init(fileHandler.getFileUrlList(file));
-
-//         // migrate pics
-//         const result = await migrater.migrate();
-
-//         if (result.total === 0) continue;
-
-//         total += result.total;
-//         success += result.success;
-//         if (result.success === 0) {
-//             ctx.log.warn(
-//                 `Please check your configuration, since no images migrated successfully in ${file}`
-//             );
-//             return;
-//         }
-//         let content = fileHandler.getFileContent(file);
-//         // replace content
-//         result.urls.forEach((item: any) => {
-//             content = content.replaceAll(item.original, item.new);
-//         });
-//         fileHandler.write(file, content, "", true);
-//     }
-//     return { total, success };
-// }
 
 function getImages(content: string) {
     const markdownURLList = (content.match(/\!\[.*\]\(.*\)/g) || [])
@@ -92,12 +55,12 @@ async function upload(filename: string, body: any) {
         Key: `${config.s3.prefix}/${filename}`,
         Body: body
     }
-    return new Promise<string>((resolve, reject) => {
-        client.upload(params, (err: Error, data: S3.ManagedUpload.SendData) => {
-            if (err) return reject(err)
-            resolve(data.Location)
-        })
-    })
+
+    await client.putObject(params)
+    let endpoint = new URL(config.s3.endpoint)
+    endpoint.host = `${params.Bucket}.${endpoint.host}`
+    endpoint.pathname = params.Key
+    return endpoint.toString()
 }
 
 
