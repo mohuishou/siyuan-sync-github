@@ -4,7 +4,7 @@ node_modules
 .DS_Store
 dist-ssr
 *.local
-
+dist
 # lock
 yarn.lock
 package-lock.json

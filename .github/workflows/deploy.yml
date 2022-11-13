@@ -7,6 +7,35 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          submodules: true
+          node-version: '14'
+      - uses: actions/checkout@v3
+        with:
+          submodules: true 
+      - name: cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules
+      - run: npm i
+      - name: git setting
+        run: |
+          git config --global user.email "1@lailin.xyz"
+          git config --global user.name "mohuishou"
+      - uses: actions/checkout@v3
+        with:
+          ref: 'release'
+          path: './dist'
+
+      - name: build
+        run: |
+          rm -rf ./dist/*
+          npm run build
+
+      - name: deploy
+        run: |
+          cd dist
+          git add .
+          git commit -m "auto released"
+          git push
