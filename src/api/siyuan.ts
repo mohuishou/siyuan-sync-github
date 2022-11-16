@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { dayjs } from 'element-plus';
+import { config } from "../config/config"
+
 let http = axios.create({
     baseURL: "http://127.0.0.1:6806"
 })
@@ -73,9 +75,15 @@ function genAttrs(attrs: { [key: string]: any }) {
 }
 
 export async function getSubDocs(pid: string, keyword: string): Promise<block[]> {
-    let sql = `select * from blocks where type = 'd' and path like '/${pid}/%' `
-    if (keyword && keyword != "") sql += `and content like '%${keyword}%'`
-    sql += `order by sort asc, updated desc`
+    let sql
+    if (config.sql) {
+
+    } else {
+        sql = `select * from blocks where type = 'd' and path like '/${pid}/%' `
+        sql += `and content like '%${keyword}%'`
+        sql += `order by sort asc, updated desc`
+    }
+
     return await query(sql)
 }
 

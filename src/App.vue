@@ -39,14 +39,13 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, inject, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import YAML from 'yaml'
-import { getCurrentDocID, getSubDocs, exportMd, block, setBlockAttrs, getBlockAttrs } from "./api/siyuan"
+import { getCurrentDocID, getSubDocs, exportMd, block, setBlockAttrs, getBlockAttrs, query } from "./api/siyuan"
 import { config } from './config/config';
 import { migrate } from "./api/migrater"
 import { upsertFile } from './api/github';
 import dayjs from 'dayjs';
-import { ElNotification } from 'element-plus'
 
 let currentDocID: string
 let docs = ref([])
@@ -55,7 +54,14 @@ let keyword = ref("")
 
 async function getDocs() {
   loading.refresh = true
-  let subDocs = await getSubDocs(currentDocID, keyword.value)
+  let sql = "select * from blocks where type = 'd' and path like '/${current_doc_id}/%' and content like '%${keyword}%' order by sort asc, updated desc"
+  if (config.sql) {
+    sql = config.sql
+  }
+  sql = sql.replace("${current_doc_id}", currentDocID)
+  sql = sql.replace("${keyword}", keyword.value)
+
+  let subDocs = await query(sql)
   docs.value = subDocs
   await sleep(500)
   loading.refresh = false

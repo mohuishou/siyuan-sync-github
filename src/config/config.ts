@@ -41,6 +41,8 @@ export interface Sync {
 
 export interface Config {
     baseURL: string;
+    // 自定义 sql，注意仅支持文档块
+    sql?: string;
     github: Github;
     s3: S3;
     sync: Sync;
