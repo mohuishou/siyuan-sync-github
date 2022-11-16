@@ -51,7 +51,6 @@ export async function query(sql: string): Promise<block[]> {
 }
 
 function genAttrs(attrs: { [key: string]: any }) {
-    // console.log(attrs)
     for (let k in attrs) {
         let v = attrs[k]
         if (k.includes("custom-")) k = k.replace("custom-", "")
@@ -72,19 +71,6 @@ function genAttrs(attrs: { [key: string]: any }) {
         attrs.status = "已同步"
     }
     return attrs
-}
-
-export async function getSubDocs(pid: string, keyword: string): Promise<block[]> {
-    let sql
-    if (config.sql) {
-
-    } else {
-        sql = `select * from blocks where type = 'd' and path like '/${pid}/%' `
-        sql += `and content like '%${keyword}%'`
-        sql += `order by sort asc, updated desc`
-    }
-
-    return await query(sql)
 }
 
 export function notifyError(msg: string) {
