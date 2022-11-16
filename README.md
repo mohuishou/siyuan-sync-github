@@ -1,14 +1,19 @@
 # siyuan-sync-github
 
+同步思源笔记文档 Markdown 到 github 指定路径，可以用于 hexo, hugo 等博客工具
+
+- 支持自动上传图片到 s3/oss/cos 等对象存储图床
+- 支持自定 yaml front matter 自定义
+
 ## 使用说明
 
-- 在思源集市安装 siyuan-sync-github 或者是[手动下载](https://github.com/mohuishou/siyuan-sync-github/archive/refs/heads/main.zip) 解压缩到 `data/widget/siyuan-sync-github` 目录
+在思源集市安装 siyuan-sync-github 或者是[手动下载最新 Release](https://github.com/mohuishou/siyuan-sync-github/releases) 解压缩到 `data/widget/siyuan-sync-github` 目录
 
 ### 配置 `config.js`
   
 创建 `siyuan-sync-github/config.js` 文件，目前仅支持手动设置配置文件，暂未实现配置页面
 
-  注意: 默认情况下，我们获取当前挂件块所在页面下的所有文档
+注意: 默认情况下，我们获取当前挂件块所在页面下的所有文档
 
 ```js
   var SiyuanSyncConfig = {
@@ -37,6 +42,7 @@
         //       array: 以逗号分割字符串数组
         //       json:  会执行  JSON.parse
         // default: 如果文档不存在对应的属性值，使用默认值填充这个值
+        // 详细说明可以查看下方的 FAQ
         attrs: {
             index_img: { key: "title-img" },
             categories: { key: "categories", type: "array" },
@@ -86,6 +92,74 @@ order by sort asc, updated desc
 select * from blocks 
 where type = 'd' and content like '%${keyword}%' 
 order by sort asc, updated desc
+```
+
+### 如何自定义 yaml front matter ?
+
+`yaml front matter` 就是生成 Markdown 文件时，我们会在 Markdown 文件的最上方添加一部分 yaml 字段，这个功能在 hexo、hugo 等静态博客中很常见，最后生产的效果类似下方
+
+```markdown
+---
+title: 这是一篇测试文档
+date: 2022-11-16 10:00:00
+tags: ["test"]
+---
+
+test
+```
+
+支持设置的字段分为两种，一种是思源自带的系统字段，一种是大家可以设置的自定义字段，下面展示了系统字段
+
+```json
+{
+    "id": "20221115205844-yy9adlf",
+    // 文档标签
+    "tags": [
+        "k8s",
+        "kubebuilder"
+    ],
+    // 文档标题
+    "title": "第三方应用如何调用我们 kubebuilder 生成的自定义资源?",
+    // 笔记的题头图，去掉了 css
+    "title-img": "assets/operator-kubebuilder-clientset-20221116105037-powgjpb.png",
+
+    // 自带的更新时间
+    "updated": "20221116103539",
+
+    // 这两个字段是挂件帮忙格式化后的字段
+    "updated_at": "2022-11-16 10:35:39",
+    "created_at": "2022-11-16 23:13:29",
+}
+```
+
+自定义字段就是我们设置文档属性的时候自定的字段，字段名和字段值都是大家自行设置的
+
+属性字段这么多，挂件在导出文档的时候不会所有字段都渲染出来，渲染的字段依靠配置里的 `sync.attrs` 字段控制
+
+```js
+{
+    title_rename: { key: "title", type: "string", default: "" },
+}
+```
+
+配置示例如上，attrs 的 key 是我们最终渲染到 Markdown 文件中的 key, value 是一个对象
+
+- `key`: 表示思源文档的属性值，例如我们这里取值是 title，表示使用文档标题
+- `type`: 表示这个字段的类型，这个一般用于我们的自定义字段
+  - 目前支持 `string`, `json`, `array` 三种选项
+  - `string`: 默认值，不做任何处理
+  - `json`: 会使用 `JSON.parse` 解析字符串，字符串必须是一个 json 字符串
+  - `array`: 会使用 `,` 分割字符串为数组，例如 `"".split(",")`
+- `default`: 表示如果没有设置这个字段，就用 default 来填充
+
+我们上面的示例配置渲染出来的文档就是
+
+```markdown
+---
+title_rename: 测试文档
+---
+
+test
 ```
 
 ## Changelog
