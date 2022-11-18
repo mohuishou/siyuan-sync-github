@@ -16,21 +16,23 @@
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="标签">
+      <el-table-column label="标签" width="170">
         <template #default="scope">
           <el-tag class="tag" size="small" v-for="tag in scope.row.attrs.tags">{{ tag }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="attrs.urlname" label="url" />
-      <el-table-column prop="attrs.updated_at" label="更新时间" />
-      <el-table-column label="状态">
+      <el-table-column prop="attrs.urlname" label="url" width="180" />
+      <el-table-column prop="attrs.updated_at" label="更新时间" width="170" />
+      <el-table-column label="状态" width="100">
         <template #default="scope">
           <el-tag class="tag" size="small">{{ scope.row.attrs.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200">
+      <el-table-column label="操作" width="100">
         <template #default="scope">
-          <el-button size="small" type="primary" @click="sync(scope.row)">发布</el-button>
+          <el-button :disabled="scope.row.attrs.status != '待同步'" size="small" type="primary" @click="sync(scope.row)">
+            发布
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -41,11 +43,12 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
 import YAML from 'yaml'
-import { getCurrentDocID, getSubDocs, exportMd, block, setBlockAttrs, getBlockAttrs, query } from "./api/siyuan"
+import { getCurrentDocID, exportMd, block, setBlockAttrs, getBlockAttrs, query } from "./api/siyuan"
 import { config } from './config/config';
 import { migrate } from "./api/migrater"
 import { upsertFile } from './api/github';
 import dayjs from 'dayjs';
+import { ElMessage } from 'element-plus'
 
 let currentDocID: string
 let docs = ref([])
@@ -62,6 +65,10 @@ async function getDocs() {
   sql = sql.replace("${keyword}", keyword.value)
 
   let subDocs = await query(sql)
+  subDocs = subDocs.map(doc => {
+    doc.matter = getAttrs(doc)
+    return doc
+  })
   docs.value = subDocs
   await sleep(500)
   loading.refresh = false
@@ -69,14 +76,8 @@ async function getDocs() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function sync(doc: block) {
-  loading.show = true
-  loading.text = `${doc.content}: 导出中`
-
-  let data: block = JSON.parse(JSON.stringify(doc))
-  data.markdown = await exportMd(doc.id)
-
-  let attrs: any = {}
+function getAttrs(data: block) {
+  let attrs: { [key: string]: any } = { valid: true }
   for (const key in config.sync.attrs) {
     const dest = config.sync.attrs[key]
     if (dest.key in data.attrs) {
@@ -92,6 +93,29 @@ async function sync(doc: block) {
       }
     }
     else if (dest.default) attrs[key] = dest.default
+
+    if (dest.required && attrs[key] == undefined) {
+      attrs.valid = false
+      attrs.valid_message = `required key is undefined: ${key}`
+    }
+  }
+  console.log(attrs)
+  return attrs
+}
+
+
+async function sync(doc: block) {
+  loading.show = true
+  loading.text = `${doc.content}: 导出中`
+
+  let data: block = JSON.parse(JSON.stringify(doc))
+  data.markdown = await exportMd(doc.id)
+
+  let attrs = getAttrs(data)
+  if (!attrs.valid) {
+    ElMessage.error({ message: attrs.valid_message })
+    loading.show = false
+    return
   }
 
   // 生成文件名

@@ -6,6 +6,7 @@ let http = axios.create({
     baseURL: "http://127.0.0.1:6806"
 })
 
+
 export interface block {
     alias: string;
     box: string;
@@ -30,6 +31,8 @@ export interface block {
     type: string;
     updated: string;
     created: string;
+
+    [key: string]: any;
 }
 
 export async function query(sql: string): Promise<block[]> {

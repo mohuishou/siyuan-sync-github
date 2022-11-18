@@ -19,6 +19,8 @@ export interface Attr {
     key: string;
     default: any;
     type?: "string" | "json" | "array"
+    // 是否必填
+    required?: boolean
 }
 
 export interface Attrs {
