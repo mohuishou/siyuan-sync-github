@@ -144,14 +144,36 @@ test
 
 配置示例如上，attrs 的 key 是我们最终渲染到 Markdown 文件中的 key, value 是一个对象
 
-- `key`: 表示思源文档的属性值，例如我们这里取值是 title，表示使用文档标题
-- `type`: 表示这个字段的类型，这个一般用于我们的自定义字段
-  - 目前支持 `string`, `json`, `array` 三种选项
-  - `string`: 默认值，不做任何处理
-  - `json`: 会使用 `JSON.parse` 解析字符串，字符串必须是一个 json 字符串
-  - `array`: 会使用 `,` 分割字符串为数组，例如 `"".split(",")`
-- `default`: 表示如果没有设置这个字段，就用 default 来填充
-- `required`: boolean 是否必填，如果必填字段不存在会直接报错
+```typescript
+// Attr front matter 属性定义
+export interface Attr {
+    // 表示思源文档的属性值，例如我们这里取值是 title，表示使用文档标题
+    key: string;
+    // `default`: 表示如果没有设置这个字段，就用 default 来填充
+    default: any;
+    // 数据类型, 表示这个字段的类型，这个一般用于我们的自定义字段
+    // - `string`: 默认值，不做任何处理
+    // - `json`: 会使用 `JSON.parse` 解析字符串，字符串必须是一个 json 字符串
+    // - `array`: 会使用 `,` 分割字符串为数组，例如 `"".split(",")`
+    type?: "string" | "json" | "array"
+    // `required`: 是否必填，如果必填字段不存在会直接报错
+    required?: boolean
+    // 在表格中对外展示的配置
+    column?: AttrColumn
+}
+
+// AttrColumn 在表格中对外展示的配置
+export interface AttrColumn {
+    // 是否展示
+    show?: boolean
+    // 列表宽度
+    width?: number
+    // 展示的名字
+    label?: string
+
+    [key: string]: any
+}
+```
 
 我们上面的示例配置渲染出来的文档就是
 
@@ -165,6 +187,9 @@ test
 
 ## Changelog
 
+### v0.3.0 支持自定义表格显示字段
+
+- 支持自定义表格显示字段
 ### v0.2.0 支持设置字段必填校验
 
 - 支持设置字段必填校验
