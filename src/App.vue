@@ -32,7 +32,7 @@
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="scope">
-          <el-button :disabled="scope.row.attrs.status != statues.published" size="small" type="primary"
+          <el-button :disabled="scope.row.attrs.status != statues.unpublished.key" size="small" type="primary"
             @click="sync(scope.row)">
             发布
           </el-button>
