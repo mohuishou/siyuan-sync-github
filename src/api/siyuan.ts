@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { dayjs } from 'element-plus';
-import { config } from "../config/config"
+import { statues } from "../config/config"
 
 let http = axios.create({
     baseURL: "http://127.0.0.1:6806"
@@ -69,9 +69,9 @@ function genAttrs(attrs: { [key: string]: any }) {
     if ('tags' in attrs) attrs.tags = attrs.tags.split(",")
     else attrs.tags = []
     if (!attrs.lastSyncTime || dayjs(attrs.updated).isAfter(dayjs(attrs.lastSyncTime))) {
-        attrs.status = "待同步"
+        attrs.status = statues.unpublished.key
     } else {
-        attrs.status = "已同步"
+        attrs.status = statues.published.key
     }
     return attrs
 }

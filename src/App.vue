@@ -16,21 +16,24 @@
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="标签" width="170">
+      <el-table-column v-for="(v, k) in columns" :key="k" :label="v.label" :width="v.width">
         <template #default="scope">
-          <el-tag class="tag" size="small" v-for="tag in scope.row.attrs.tags">{{ tag }}</el-tag>
+          <el-tag v-if="v.type == 'array'" class="tag" size="small" v-for="tag in scope.row.matter[k]">{{ tag }}
+          </el-tag>
+          <span v-else>{{ scope.row.matter[k] }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="attrs.urlname" label="url" width="180" />
-      <el-table-column prop="attrs.updated_at" label="更新时间" width="170" />
       <el-table-column label="状态" width="100">
         <template #default="scope">
-          <el-tag class="tag" size="small">{{ scope.row.attrs.status }}</el-tag>
+          <el-tag class="tag" size="small" :type="statues[scope.row.attrs.status].color">{{
+              statues[scope.row.attrs.status].label
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="scope">
-          <el-button :disabled="scope.row.attrs.status != '待同步'" size="small" type="primary" @click="sync(scope.row)">
+          <el-button :disabled="scope.row.attrs.status != statues.published" size="small" type="primary"
+            @click="sync(scope.row)">
             发布
           </el-button>
         </template>
@@ -44,16 +47,26 @@
 import { reactive, onMounted, ref } from 'vue'
 import YAML from 'yaml'
 import { getCurrentDocID, exportMd, block, setBlockAttrs, getBlockAttrs, query } from "./api/siyuan"
-import { config } from './config/config';
+import { config, AttrColumn, statues } from './config/config';
 import { migrate } from "./api/migrater"
 import { upsertFile } from './api/github';
 import dayjs from 'dayjs';
 import { ElMessage } from 'element-plus'
 
 let currentDocID: string
-let docs = ref([])
+let docs = ref<block[]>([])
 let loading = reactive({ show: false, text: "", refresh: false })
 let keyword = ref("")
+
+let columns = reactive<{ [key: string]: AttrColumn }>({})
+for (const key in config.sync.attrs) {
+  let attr = config.sync.attrs[key]
+  if (!attr.column || !attr.column.show) continue
+  let column = attr.column
+  column.type = attr.type
+  if (!column.label) column.label = key
+  columns[key] = column
+}
 
 async function getDocs() {
   loading.refresh = true
@@ -69,6 +82,7 @@ async function getDocs() {
     doc.matter = getAttrs(doc)
     return doc
   })
+  console.log(subDocs)
   docs.value = subDocs
   await sleep(500)
   loading.refresh = false
@@ -81,15 +95,18 @@ function getAttrs(data: block) {
   for (const key in config.sync.attrs) {
     const dest = config.sync.attrs[key]
     if (dest.key in data.attrs) {
+      let v = data.attrs[dest.key]
       switch (dest.type) {
         case "array":
-          attrs[key] = data.attrs[dest.key].split(",")
+          if (v instanceof Array) attrs[key] = v
+          else attrs[key] = v.split(",")
           break
         case "json":
-          attrs[key] = JSON.parse(data.attrs[dest.key].split(","))
+          if (v instanceof Object) attrs[key] = v
+          else attrs[key] = JSON.parse(v)
           break
         default:
-          attrs[key] = data.attrs[dest.key]
+          attrs[key] = v
       }
     }
     else if (dest.default) attrs[key] = dest.default
