@@ -151,7 +151,9 @@ async function sync(doc: block) {
 
   // 上传到 github
   await upsertFile(filename, data.markdown)
-  await setBlockAttrs(doc.id, { "lastSyncTime": dayjs().format("YYYY-MM-DD HH:mm:ss") })
+  let syncAttr: { [key: string]: any } = { "lastSyncTime": dayjs().format("YYYY-MM-DD HH:mm:ss") }
+  if (!attrs.publishTime) syncAttr.publishTime = dayjs().format("YYYY-MM-DD HH:mm:ss")
+  await setBlockAttrs(doc.id, syncAttr)
   doc.attrs = await getBlockAttrs(doc.id)
 
   loading.show = false
