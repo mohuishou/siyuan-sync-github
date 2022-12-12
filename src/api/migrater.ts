@@ -48,6 +48,7 @@ async function upload(filename: string, body: any) {
             secretAccessKey: config.s3.secretKey
         },
         region: config.s3.region,
+        forcePathStyle: true,
         endpoint: config.s3.endpoint,
     })
     let params = {
@@ -59,9 +60,8 @@ async function upload(filename: string, body: any) {
 
     await client.putObject(params)
     if (config.s3.baseURL) {
-        let url = new URL(config.s3.baseURL)
-        url.pathname = params.Key
-        return url.toString()
+        let url = config.s3.baseURL + params.Key
+        return url
     }
     let endpoint = new URL(config.s3.endpoint)
     endpoint.host = `${params.Bucket}.${endpoint.host}`

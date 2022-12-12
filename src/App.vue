@@ -136,9 +136,11 @@ async function sync(doc: block) {
   }
 
   // 生成文件名
+  let created_time = data.attrs['created_at']
+  let created_date = /\d{4}-\d{1,2}-\d{1,2}/g.exec(created_time)[0]
   let filename = data.attrs.title
   if (config.sync.filename.key in data.attrs) filename = data.attrs[config.sync.filename.key]
-  filename = filename + ".md"
+  filename = created_date + "-" + filename + ".md"
 
   // 去除封面图片
   data.markdown = data.markdown.replace(/^\!\[.*?\].*?\n/ig, "")
