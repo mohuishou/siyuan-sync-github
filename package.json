@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build && cp -f README.md dist/ && cp -f LICENSE dist/ ",
     "generate": "vite-ssg build",
     "preview": "vite preview",
