@@ -40,7 +40,7 @@ export async function query(sql: string): Promise<block[]> {
     let items: block[] = rsp.data.data
     items.map(item => {
         if (!item.ial) return item
-        let attrs = JSON.parse(JSON.stringify(item));
+        let attrs: any = { created: item.created }
         let iter = item.ial.matchAll(/(\b.*?)="(.*?)"/igm)
         for (let m of iter) {
             let k = m[1], v = m[2]
